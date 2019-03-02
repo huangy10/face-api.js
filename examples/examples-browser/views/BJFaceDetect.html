@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="face-api.js"></script>
+    <script src="js/commons.js"></script>
+    <script src="js/drawing.js"></script>
+    <script src="js/faceDetectionControls.js"></script>
+    <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+    <link rel="stylesheet" href="bj.css">
+  </head>
+  <body>
+    <div id="webcam_display">
+      <video onplay="onPlay(this)" id="inputVideo" autoplay muted></video>
+      <canvas id="overlay"></canvas>
+    </div>
+
+    <script>
+      async function onPlay() {
+        const videoEl = $('#inputVideo').get(0)
+        if (videoEl.paused || videoEl.ended || !isFaceDetectionModelLoaded()) {
+          return setTimeout(() => onPlay())
+        }
+        let inputSize = 256
+        let scoreThreshold = 0.5
+        // const options = getFaceDetectorOptions()
+        const options = new faceapi.TinyFaceDetectorOptions({inputSize, scoreThreshold})
+        const results = await faceapi.detectAllFaces(videoEl, options)
+        if (results.length !== 0)  {
+          drawDetections(videoEl, $('#overlay').get(0), results)
+        }
+        setTimeout(()=>onPlay())
+      }
+
+      async function run() {
+        await changeFaceDetectorFlag(TINY_FACE_DETECTOR)
+        // changeInputSize(128)
+        await getCurrentFaceDetectionNet().load('/')
+
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {width: 1920, height: 1080}
+        })
+        const videoEl = $('#inputVideo').get(0)
+        videoEl.srcObject = stream
+      }
+
+      $(document).ready(function() {
+        run()
+      })
+    </script>
+  </body>
+</html>

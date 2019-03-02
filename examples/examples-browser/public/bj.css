@@ -1,0 +1,26 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+
+div#webcam_display {
+  width: 100%;
+  height: 100%;
+  position: fixed;
+}
+
+video {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+canvas#overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1000;
+}
+

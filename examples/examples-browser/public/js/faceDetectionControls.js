@@ -88,6 +88,10 @@ function isFaceDetectionModelLoaded() {
   return !!getCurrentFaceDetectionNet().params
 }
 
+async function changeFaceDetectorFlag(detector) {
+  selectedFaceDetector = detector
+}
+
 async function changeFaceDetector(detector) {
   ['#ssd_mobilenetv1_controls', '#tiny_face_detector_controls', '#mtcnn_controls']
     .forEach(id => $(id).hide())
