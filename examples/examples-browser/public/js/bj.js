@@ -22,7 +22,10 @@ async function run() {
   await getCurrentFaceDetectionNet().load('/')
 
   const stream = await navigator.mediaDevices.getUserMedia({
-    video: {width: videoWidth, height: videoHeight}
+    video: {
+      width: videoWidth, height: videoHeight,
+      deviceId: "4fad1d8224e145a5153f193a572f9012d34a864eb97172b1cf274548c3b58dd2"
+    }
   })
   const videoEl = $('#inputVideo').get(0)
   videoEl.srcObject = stream
