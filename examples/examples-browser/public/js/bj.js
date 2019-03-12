@@ -1,4 +1,4 @@
-import { ObjectDetection } from "../../../../dist/face-api";
+// import { ObjectDetection } from "../../../../dist/face-api";
 
 const videoWidth = 1920
 const videoHeight = 1080
@@ -16,6 +16,11 @@ async function onPlay() {
   const results = await faceapi.detectAllFaces(videoEl, options)
   if (results.length !== 0)  {
     drawDetections(videoEl, $('#overlay').get(0), results)
+    generateAvatarData(videoEl, results)
+    var imgData = await generateAvatarData(videoEl, results)
+    if (imgData.length > 0) {
+      $("#avatar").attr('src', imgData[0])
+    }
   }
   setTimeout(()=>onPlay())
 }
@@ -35,15 +40,16 @@ async function run() {
   videoEl.srcObject = stream
 }
 
-async function generateAvatarData(results) {
-  const resizedDetetions = resizeCanvasAndResults(videoEl, $('#overlay').get(0), results)
-  var detectionArray = Array.isArray(results)
-    ? results
-    : [results]
+async function generateAvatarData(imgObj, results) {
+  // const resizedDetetions = resizeCanvasAndResults(imgObj, $('#overlay').get(0), results)
+  const resizedDetetions = results
+  var detectionArray = Array.isArray(resizedDetetions)
+    ? resizedDetetions
+    : [resizedDetetions]
   imgData = []
-  detectionArray.forEach(function (det) {
-    var box = det instanceof ObjectDetection ? det.box : det
-    var data = getImagePortion(videoEl, box)
+  detectionArray.forEach(async function (det) {
+    var box = det.box
+    var data = await getImagePortion(imgObj, box)
     imgData.push(data)
   })
 
@@ -54,9 +60,9 @@ async function getImagePortion(imgObj, box) {
   let canvas = document.createElement('canvas')
   canvas.width = box.width
   canvas.height = box.height
-  let ctx = canvas.getContext("2d")
+  let ctx = canvas.getContext('2d')
   
-  canvas.drawImage(
+  ctx.drawImage(
     imgObj,
     box.x, box.y, box.width, box.height,
     0, 0, box.width, box.height)
