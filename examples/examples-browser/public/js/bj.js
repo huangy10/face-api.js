@@ -58,15 +58,28 @@ async function generateAvatarData(imgObj, results) {
 
 async function getImagePortion(imgObj, box) {
   let canvas = document.createElement('canvas')
+  const scale = 2;
   canvas.width = box.width
   canvas.height = box.height
   let ctx = canvas.getContext('2d')
   
+  let scaledBox = boxScaleCentered(box, scale)
   ctx.drawImage(
     imgObj,
-    box.x, box.y, box.width, box.height,
+    scaledBox.x, scaledBox.y, scaledBox.width, scaledBox.height,
     0, 0, box.width, box.height)
   return canvas.toDataURL();
+}
+
+function boxScaleCentered(box, scale) {
+  var centerX = box.x + box.width / 2, centerY = box.y + box.height / 2
+  var newW = box.width * scale, newH = box.height * scale
+  return {
+    x: centerX - newW / 2,
+    y: centerY - newH / 2,
+    width: newW,
+    height: newH
+  }
 }
 
 $(document).ready(function() {
