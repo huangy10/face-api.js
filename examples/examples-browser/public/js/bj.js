@@ -1,5 +1,9 @@
+import { ObjectDetection } from "../../../../dist/face-api";
+
 const videoWidth = 1920
 const videoHeight = 1080
+
+
 async function onPlay() { 
   const videoEl = $('#inputVideo').get(0)
   if (videoEl.paused || videoEl.ended || !isFaceDetectionModelLoaded()) {
@@ -31,16 +35,32 @@ async function run() {
   videoEl.srcObject = stream
 }
 
-async function takeSnaphot() {
-  var canvas = document.createElement('canvas')
-  canvas.width = videoWidth
-  canvas.height = videoHeight
-  var ctx = canvas.getContext('2d')
-  var videoEl = $('#inputVideo').get(0)
+async function generateAvatarData(results) {
+  const resizedDetetions = resizeCanvasAndResults(videoEl, $('#overlay').get(0), results)
+  var detectionArray = Array.isArray(results)
+    ? results
+    : [results]
+  imgData = []
+  detectionArray.forEach(function (det) {
+    var box = det instanceof ObjectDetection ? det.box : det
+    var data = getImagePortion(videoEl, box)
+    imgData.push(data)
+  })
+
+  return imgData
+}
+
+async function getImagePortion(imgObj, box) {
+  let canvas = document.createElement('canvas')
+  canvas.width = box.width
+  canvas.height = box.height
+  let ctx = canvas.getContext("2d")
   
-  ctx.drawImage(videoEl, 0, 0, 1920, 1080)
-  var imgData = canvas.toDataURL('image/jpg')
-  
+  canvas.drawImage(
+    imgObj,
+    box.x, box.y, box.width, box.height,
+    0, 0, box.width, box.height)
+  return canvas.toDataURL();
 }
 
 $(document).ready(function() {
