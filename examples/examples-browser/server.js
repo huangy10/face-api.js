@@ -1,10 +1,14 @@
 const express = require('express')
 const path = require('path')
 const { get } = require('request')
+const fs = require('fs')
+const { promisify } = require('util')
 
 const app = express()
 
-app.use(express.json())
+app.use(express.json(
+  {limit: '50mb', extended: true}
+))
 app.use(express.urlencoded({ extended: true }))
 
 const viewsDir = path.join(__dirname, 'views')
@@ -45,6 +49,37 @@ app.post('/fetch_external_image', async (req, res) => {
   } catch (err) {
     return res.status(404).send(err.toString())
   }
+})
+
+const avatarPathPrefix = '/Users/lena/Projects/2019/FacePaint/data/avatars/'
+
+const writeFile = promisify(fs.writeFile)
+
+function getExt(data_url){
+  return data_url.split("data:image/")[1].split(";")[0];
+}
+
+// gets the base64 encoded image from the data url
+function getBa64Img(data_url){
+  return data_url.split(";base64,").pop();
+}
+
+app.post('/snapshot', async (req, res) => {
+  // console.log(req.body)
+  let imDatas = req.body['avatars']
+  if (imDatas === undefined) {
+    return res.status(200).json({err: "avatar not found"})
+  }
+  imDatas = Array.isArray(imDatas) ? imDatas: [imDatas]
+  imDatas.forEach(async data => {
+    let b64Data = data['data']
+    let filename = data['filename']
+    let err = await writeFile(avatarPathPrefix + filename + '.' + getExt(b64Data), getBa64Img(b64Data), 'base64')
+    if (err !== undefined) {
+      return res.status(200).json({'err': err})
+    }
+  });
+  return res.status(200).send()
 })
 
 app.listen(3000, () => console.log('Listening on port 3000!'))
