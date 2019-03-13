@@ -65,9 +65,9 @@ function getBa64Img(data_url){
 }
 
 app.post('/snapshot', async (req, res) => {
-  // console.log(req.body)
   let imDatas = req.body['avatars']
   if (imDatas === undefined) {
+    console.log('avatar not found')
     return res.status(200).json({err: "avatar not found"})
   }
   imDatas = Array.isArray(imDatas) ? imDatas: [imDatas]
@@ -76,10 +76,11 @@ app.post('/snapshot', async (req, res) => {
     let filename = data['filename']
     let err = await writeFile(avatarPathPrefix + filename + '.' + getExt(b64Data), getBa64Img(b64Data), 'base64')
     if (err !== undefined) {
+      console.log('fail to save image')
       return res.status(200).json({'err': err})
     }
   });
-  return res.status(200).send()
+  return res.status(200).json({'err': ''})
 })
 
 app.listen(3000, () => console.log('Listening on port 3000!'))

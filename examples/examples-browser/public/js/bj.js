@@ -2,9 +2,11 @@
 
 const videoWidth = 1920
 const videoHeight = 1080
-
+var frameCount = 0
 
 async function onPlay() { 
+  requestAnimationFrame(onPlay)
+
   const videoEl = $('#inputVideo').get(0)
   if (videoEl.paused || videoEl.ended || !isFaceDetectionModelLoaded()) {
     return setTimeout(() => onPlay())
@@ -15,14 +17,20 @@ async function onPlay() {
   const options = new faceapi.TinyFaceDetectorOptions({inputSize, scoreThreshold})
   const results = await faceapi.detectAllFaces(videoEl, options)
   if (results.length !== 0)  {
+    console.log(results.length)
     drawDetections(videoEl, $('#overlay').get(0), results)
-    generateAvatarData(videoEl, results)
-    var imgData = await generateAvatarData(videoEl, results)
-    if (imgData.length > 0) {
-      $("#avatar").attr('src', imgData[0])
+    // faceapi.drawDetection($('#overlay').get(0), results)
+    // generateAvatarData(videoEl, results)
+    if (frameCount % 30 === 0) {
+      var imgData = await generateAvatarData(videoEl, results)
+      if (imgData.length > 0) {
+        $("#avatar").attr('src', imgData[0])
+        uploadAvatars(imgData)
+      }
     }
   }
-  setTimeout(()=>onPlay())
+  frameCount += 1
+  // setTimeout(()=>onPlay())
 }
 
 async function run() {
@@ -80,6 +88,38 @@ function boxScaleCentered(box, scale) {
     width: newW,
     height: newH
   }
+}
+
+async function uploadAvatars(results) {
+  if (results === undefined || results.length === 0) {
+    return
+  }
+  var fileData = []
+  results.forEach((d, idx)=>{
+    fileData.push({
+      filename: `${frameCount}-${idx}`,
+      data: d
+    })
+  })
+  var dataToUpload = {
+    ts: Date.now(),
+    avatars: fileData
+  }
+
+  $.ajax({
+    url: 'http://localhost:3000/snapshot',
+    type: 'POST',
+    data: JSON.stringify(dataToUpload),
+    contentType: 'application/json; charset=utf-8',
+    dataType: 'json',
+    async: true,
+    success: function(msg) {
+      console.log('success')
+    },
+    error: function(err) {
+      console.log(err)
+    }
+  })
 }
 
 $(document).ready(function() {
