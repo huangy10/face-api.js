@@ -52,6 +52,7 @@ app.post('/fetch_external_image', async (req, res) => {
 })
 
 const avatarPathPrefix = '/Users/lena/Projects/2019/FacePaint/data/avatars/'
+const snapshotPathPrefix = '/Users/lena/Projects/2019/FacePaint/data/snapshots/'
 
 const writeFile = promisify(fs.writeFile)
 
@@ -70,6 +71,11 @@ app.post('/snapshot', async (req, res) => {
     console.log('avatar not found')
     return res.status(200).json({err: "avatar not found"})
   }
+  let snapshotImg = req.body['snapshot']
+  if (snapshotImg === undefined) {
+    console.log('snapshot not found')
+    return res.status(200).json({err: "snapshot not found"})
+  }
   imDatas = Array.isArray(imDatas) ? imDatas: [imDatas]
   imDatas.forEach(async data => {
     let b64Data = data['data']
@@ -80,6 +86,18 @@ app.post('/snapshot', async (req, res) => {
       return res.status(200).json({'err': err})
     }
   });
+
+  let _data = snapshotImg['data']
+  let _fname = snapshotImg['filename']
+  let err = await writeFile(
+    snapshotPathPrefix + snapshotImg["filename"] + '.' + getExt(_data),
+    getBa64Img(_data),
+    'base64')
+  if (err !== undefined) {
+    console.log('fail to save snapshot')
+    return res.status(200).json({'err': err})
+  }
+
   return res.status(200).json({'err': ''})
 })
 

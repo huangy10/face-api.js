@@ -17,7 +17,6 @@ async function onPlay() {
   const options = new faceapi.TinyFaceDetectorOptions({inputSize, scoreThreshold})
   const results = await faceapi.detectAllFaces(videoEl, options)
   if (results.length !== 0)  {
-    console.log(results.length)
     drawDetections(videoEl, $('#overlay').get(0), results)
     // faceapi.drawDetection($('#overlay').get(0), results)
     // generateAvatarData(videoEl, results)
@@ -25,7 +24,12 @@ async function onPlay() {
       var imgData = await generateAvatarData(videoEl, results)
       if (imgData.length > 0) {
         $("#avatar").attr('src', imgData[0])
-        uploadAvatars(imgData)
+        await uploadAvatars(imgData, 
+          await getImagePortion(
+            videoEl, 
+            {x: 0, y: 0, width: videoWidth, height: videoHeight},
+            1
+          ))
       }
     }
   }
@@ -64,9 +68,9 @@ async function generateAvatarData(imgObj, results) {
   return imgData
 }
 
-async function getImagePortion(imgObj, box) {
+async function getImagePortion(imgObj, box, scale) {
   let canvas = document.createElement('canvas')
-  const scale = 2;
+  scale = scale || 2
   canvas.width = box.width
   canvas.height = box.height
   let ctx = canvas.getContext('2d')
@@ -90,20 +94,24 @@ function boxScaleCentered(box, scale) {
   }
 }
 
-async function uploadAvatars(results) {
+async function uploadAvatars(results, snapshot) {
   if (results === undefined || results.length === 0) {
     return
   }
   var fileData = []
   results.forEach((d, idx)=>{
     fileData.push({
-      filename: `${frameCount}-${idx}`,
+      filename: `${frameCount / 30}-${idx}`,
       data: d
     })
   })
   var dataToUpload = {
     ts: Date.now(),
-    avatars: fileData
+    avatars: fileData,
+    snapshot: {
+      filename: `snapshot-${frameCount / 30}`, 
+      data: snapshot
+    }
   }
 
   $.ajax({
@@ -114,7 +122,7 @@ async function uploadAvatars(results) {
     dataType: 'json',
     async: true,
     success: function(msg) {
-      console.log('success')
+      // console.log('success')
     },
     error: function(err) {
       console.log(err)
